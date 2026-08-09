@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: forgetrack-api
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/forgetrack}
+    username: ${POSTGRES_USER:forgetrack}
+    password: ${POSTGRES_PASSWORD:forgetrack}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+
+app:
+  frontend-origins: ${FRONTEND_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+  seed-demo: ${SEED_DEMO:true}
+  github-token: ${GITHUB_TOKEN:}

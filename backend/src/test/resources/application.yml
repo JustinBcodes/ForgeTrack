@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:forgetrack;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+  flyway:
+    enabled: false
+
+app:
+  seed-demo: true
+  frontend-origins: http://localhost:5173,http://127.0.0.1:5173
+  github-token:

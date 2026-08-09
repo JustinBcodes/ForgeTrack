@@ -1,0 +1,12 @@
+.idea/
+.vscode/
+*.iml
+.env
+.DS_Store
+work/
+outputs/
+
+backend/target/
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
