@@ -53,4 +53,24 @@ describe('ForgeTrack dashboard', () => {
     expect(screen.getByRole('dialog', { name: 'Create a new issue' })).toBeInTheDocument()
     expect(screen.getByPlaceholderText('What needs to be done?')).toHaveFocus()
   })
+
+  it('opens issue details and updates status through the API', async () => {
+    const detail = { ...issuePage.items[0], projectId: 'project-1', description: 'Filter work items.', reporter: bootstrap.members[0], createdAt: new Date().toISOString(), comments: [], activities: [], pullRequests: [] }
+    const fetchMock = vi.fn((input: RequestInfo | URL, options?: RequestInit) => {
+      const url = String(input)
+      if (url.endsWith('/api/bootstrap')) return jsonResponse(bootstrap)
+      if (url.includes('/dashboard')) return jsonResponse(dashboard)
+      if (url.endsWith('/api/issues/issue-1')) return jsonResponse(options?.method === 'PATCH' ? { ...detail, status: 'DONE' } : detail)
+      if (url.includes('/issues')) return jsonResponse(issuePage)
+      throw new Error(`Unexpected request: ${url}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    render(<App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /Add issue filtering to the REST API/ }))
+    const dialog = await screen.findByRole('dialog', { name: 'FORGE-1 details' })
+    expect(dialog).toBeInTheDocument()
+    await userEvent.selectOptions(screen.getByLabelText('Issue status'), 'DONE')
+    expect(fetchMock).toHaveBeenCalledWith('/api/issues/issue-1', expect.objectContaining({ method: 'PATCH' }))
+  })
 })

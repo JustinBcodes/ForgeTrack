@@ -1,5 +1,6 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { api } from './api'
+import IssueDetailPanel from './IssueDetailPanel'
 import type {
   Bootstrap,
   CreateIssueInput,
@@ -24,6 +25,7 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
+  const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null)
 
   const project = useMemo(
     () => bootstrap?.projects.find((candidate) => candidate.id === projectId) ?? bootstrap?.projects[0],
@@ -110,8 +112,9 @@ function App() {
         </section>
 
         <Stats dashboard={dashboard} />
+        <ProjectPulse dashboard={dashboard} />
 
-        <section className="issues-card">
+        <section className="issues-card" id="issues">
           <div className="issues-heading">
             <div>
               <h2>Issues</h2>
@@ -120,7 +123,7 @@ function App() {
             <button className="ghost-button" onClick={() => void refresh()}>Refresh</button>
           </div>
           <Filters filters={filters} onChange={setFilters} />
-          <IssueTable issues={issues} />
+          <IssueTable issues={issues} onSelect={setSelectedIssueId} />
         </section>
       </main>
 
@@ -135,6 +138,7 @@ function App() {
           }}
         />
       )}
+      {selectedIssueId && <IssueDetailPanel issueId={selectedIssueId} repository={project.githubRepository} currentUserId={bootstrap.members[0].id} members={bootstrap.members} onClose={() => setSelectedIssueId(null)} onChanged={refresh} />}
     </div>
   )
 }
@@ -186,6 +190,32 @@ function Stats({ dashboard }: { dashboard: Dashboard | null }) {
   )
 }
 
+function ProjectPulse({ dashboard }: { dashboard: Dashboard | null }) {
+  const states: { status: IssueStatus; color: string }[] = [
+    { status: 'BACKLOG', color: '#b3bdb6' }, { status: 'TODO', color: '#8eb69b' },
+    { status: 'IN_PROGRESS', color: '#75aee4' }, { status: 'IN_REVIEW', color: '#e8bb6a' },
+    { status: 'DONE', color: '#3d9d69' },
+  ]
+  const total = dashboard?.total ?? 0
+  const progress = total ? Math.round((dashboard?.completed ?? 0) / total * 100) : 0
+  return (
+    <section className="pulse-grid" id="activity" aria-label="Project health and recent activity">
+      <article className="pulse-card">
+        <div className="pulse-heading"><div><span className="section-kicker">PROJECT HEALTH</span><h2>Work in motion</h2></div><span className="pulse-badge"><PulseIcon /> Live overview</span></div>
+        <p>A snapshot of progress across every stage of the workflow.</p>
+        <div className="progress-head"><strong>{progress}%</strong><span>of issues completed</span></div>
+        <div className="progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Issues completed"><span style={{ width: `${progress}%` }} /></div>
+        <div className="state-breakdown">{states.map(({ status, color }) => <div key={status}><i style={{ background: color }} /><span>{label(status)}</span><strong>{dashboard?.byStatus[status] ?? 0}</strong></div>)}</div>
+      </article>
+      <article className="pulse-card recent-card">
+        <div className="pulse-heading"><div><span className="section-kicker">LATEST UPDATES</span><h2>Recently active</h2></div><span className="pulse-badge">{dashboard?.recentlyUpdated.length ?? 0} updates</span></div>
+        <p>Issues that your team touched most recently.</p>
+        <div className="recent-list">{dashboard?.recentlyUpdated.slice(0, 4).map(issue => <div className="recent-row" key={issue.id}><span className="recent-type"><TypeIcon type={issue.type}/></span><div><strong>{issue.title}</strong><small>{issue.identifier} · {label(issue.status)}</small></div><time>{relativeDate(issue.updatedAt)}</time></div>)}{!dashboard?.recentlyUpdated.length && <span className="recent-empty">No recent activity yet.</span>}</div>
+      </article>
+    </section>
+  )
+}
+
 function Filters({ filters, onChange }: { filters: typeof EMPTY_FILTERS; onChange: (filters: typeof EMPTY_FILTERS) => void }) {
   return (
     <div className="filters">
@@ -210,7 +240,7 @@ function Filters({ filters, onChange }: { filters: typeof EMPTY_FILTERS; onChang
   )
 }
 
-function IssueTable({ issues }: { issues: IssuePage | null }) {
+function IssueTable({ issues, onSelect }: { issues: IssuePage | null; onSelect: (id: string) => void }) {
   if (!issues) return <div className="table-state">Loading issues…</div>
   if (!issues.items.length) return <div className="table-state"><IssueIcon /><strong>No issues match these filters</strong><span>Try clearing one or more filters.</span></div>
   return (
@@ -220,7 +250,7 @@ function IssueTable({ issues }: { issues: IssuePage | null }) {
         <tbody>
           {issues.items.map((issue) => (
             <tr key={issue.id}>
-              <td><div className="issue-title"><TypeIcon type={issue.type} /><div><strong>{issue.title}</strong><span>{issue.identifier} · {label(issue.type)}</span></div></div></td>
+              <td><button className="issue-open" onClick={() => onSelect(issue.id)}><div className="issue-title"><TypeIcon type={issue.type} /><div><strong>{issue.title}</strong><span>{issue.identifier} · {label(issue.type)}</span></div></div></button></td>
               <td><span className={`status status-${issue.status.toLowerCase()}`}><i />{label(issue.status)}</span></td>
               <td><span className={`priority priority-${issue.priority.toLowerCase()}`}><PriorityIcon />{label(issue.priority)}</span></td>
               <td>{issue.assignee ? <div className="assignee"><span className="avatar small">{initials(issue.assignee.displayName)}</span>{issue.assignee.displayName}</div> : <span className="muted">Unassigned</span>}</td>

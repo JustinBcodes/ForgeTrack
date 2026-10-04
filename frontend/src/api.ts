@@ -1,4 +1,4 @@
-import type { Bootstrap, CreateIssueInput, Dashboard, IssuePage, IssuePriority, IssueStatus, IssueType } from './types'
+import type { Bootstrap, CreateIssueInput, Dashboard, IssueDetail, IssuePage, IssuePriority, IssueStatus, IssueType } from './types'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? ''
 
@@ -26,4 +26,8 @@ export const api = {
     return request<IssuePage>(`/api/projects/${projectId}/issues?${params}`)
   },
   createIssue: (input: CreateIssueInput) => request('/api/issues', { method: 'POST', body: JSON.stringify(input) }),
+  issue: (id: string) => request<IssueDetail>(`/api/issues/${id}`),
+  updateIssue: (id: string, input: { title: string; description: string; type: IssueType; status: IssueStatus; priority: IssuePriority; actorId: string; assigneeId: string | null }) => request<IssueDetail>(`/api/issues/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  addComment: (id: string, authorId: string, body: string) => request(`/api/issues/${id}/comments`, { method: 'POST', body: JSON.stringify({ authorId, body }) }),
+  linkPullRequest: (id: string, repository: string, pullRequestNumber: number, actorId: string) => request(`/api/issues/${id}/pull-requests`, { method: 'POST', body: JSON.stringify({ repository, pullRequestNumber, actorId }) }),
 }

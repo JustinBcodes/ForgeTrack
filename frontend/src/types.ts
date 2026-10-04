@@ -43,6 +43,16 @@ export interface IssuePage {
   totalPages: number
 }
 
+export interface IssueDetail extends IssueSummary {
+  projectId: string
+  description: string
+  reporter: User
+  createdAt: string
+  comments: { id: string; author: User; body: string; createdAt: string }[]
+  activities: { id: string; actor: User; action: string; details: string; createdAt: string }[]
+  pullRequests: { id: string; repository: string; number: number; title: string; url: string; state: string }[]
+}
+
 export interface Dashboard {
   total: number
   open: number

@@ -1,6 +1,29 @@
 # ForgeTrack
 
+[![CI](https://github.com/JustinBcodes/ForgeTrack/actions/workflows/ci.yml/badge.svg)](https://github.com/JustinBcodes/ForgeTrack/actions/workflows/ci.yml)
+![React](https://img.shields.io/badge/React-19-149f68?style=flat-square) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1-149f68?style=flat-square) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-149f68?style=flat-square)
+
+![ForgeTrack project overview](screenshots/overview.png)
+
 ForgeTrack is a focused engineering project management platform: a compact Linear/Jira-style issue tracker with GitHub pull-request integration. It is built to demonstrate traditional enterprise backend engineering—relational modeling, transactional business rules, REST API design, validation, database migrations, and automated testing—without unnecessary infrastructure.
+
+| Project surface | What you can inspect |
+| --- | --- |
+| **Dashboard** | Live workflow totals, completion progress, recent activity, and issue filters |
+| **Issue workflow** | Create issues; open details; update status, priority, and assignee; discuss work |
+| **GitHub integration** | Validate and link pull requests to issues |
+| **Backend design** | 11 REST mappings, transactional issue identifiers, versioned Flyway schema |
+| **Quality gates** | Spring integration tests, React interaction tests, and CI on pushes and PRs |
+
+## Product walkthrough
+
+These screenshots use a browser fixture based on the repository's seeded demo project, so they are reproducible without a database. The application uses live API data when run normally.
+
+| Project overview | Issue detail | Create issue |
+| --- | --- | --- |
+| ![Project overview](screenshots/overview.png) | ![Issue detail drawer](screenshots/issue-details.png) | ![Create issue dialog](screenshots/new-issue.png) |
+
+The issue detail drawer supports status, priority, and assignee updates, comments, pull-request links, and an activity trail. The dashboard's progress and recent activity come from the existing project aggregation endpoint.
 
 ## Stack
 
@@ -112,6 +135,8 @@ cd frontend && npm test && npm run build
 Backend integration tests start the full Spring application against an isolated H2 database in PostgreSQL compatibility mode and exercise issue creation, validation, filtering, and dashboard aggregation through MockMvc. Frontend tests mock the REST boundary and verify the primary dashboard and issue-creation flow.
 
 GitHub Actions runs the backend and frontend checks independently on every push and pull request.
+
+To reproduce the screenshots, start the frontend with `npm run dev` in `frontend`, then run `node scripts/capture.mjs` from that directory. The script intercepts only its own browser's API requests and writes PNGs to `screenshots/`.
 
 ## Scope decisions
 
